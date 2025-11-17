@@ -22,6 +22,7 @@ function ScanScreen({ onSave }) {
   const [scanningType, setScanningType] = useState(null) // 'sortant' ou 'entrant'
   const [showValidation, setShowValidation] = useState(false)
   const [manualInput, setManualInput] = useState({ sortant: '', entrant: '' })
+  const [activeTab, setActiveTab] = useState('sortant') // 'sortant' ou 'entrant'
 
   const handleScan = (code) => {
     if (scanningType === 'sortant') {
@@ -36,7 +37,8 @@ function ScanScreen({ onSave }) {
     setScanningType(null)
   }
 
-  const handleManualAdd = (type) => {
+  const handleManualAdd = () => {
+    const type = activeTab
     const input = manualInput[type].trim()
     if (!input) return
 
@@ -65,18 +67,22 @@ function ScanScreen({ onSave }) {
     }
   }
 
-  const handleManualInputKeyPress = (e, type) => {
+  const handleManualInputKeyPress = (e) => {
     if (e.key === 'Enter') {
-      handleManualAdd(type)
+      handleManualAdd()
     }
   }
 
-  const removeCode = (code, type) => {
-    if (type === 'sortant') {
+  const removeCode = (code) => {
+    if (activeTab === 'sortant') {
       setSortants(sortants.filter(c => c !== code))
     } else {
       setEntrants(entrants.filter(c => c !== code))
     }
+  }
+
+  const getCurrentCodes = () => {
+    return activeTab === 'sortant' ? sortants : entrants
   }
 
   const canValidate = sortants.length > 0 && entrants.length > 0
@@ -110,93 +116,73 @@ function ScanScreen({ onSave }) {
     setScanningType(null)
   }
 
+  const currentCodes = getCurrentCodes()
+  const currentInput = manualInput[activeTab]
+
   return (
     <div className="scan-screen">
-      <div className="scan-sections">
-        <div className="scan-section">
-          <h2>Écrans Sortants</h2>
-          <div className="codes-list">
-            {sortants.map((code, index) => (
-              <div key={index} className="code-item">
-                <span>{code}</span>
-                <button
-                  className="remove-btn"
-                  onClick={() => removeCode(code, 'sortant')}
-                  aria-label="Supprimer"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
-          <div className="manual-input-group">
-            <input
-              type="text"
-              className="manual-input"
-              placeholder="Saisir un identifiant (ex: 1234567)"
-              value={manualInput.sortant}
-              onChange={(e) => setManualInput({ ...manualInput, sortant: e.target.value })}
-              onKeyPress={(e) => handleManualInputKeyPress(e, 'sortant')}
-              maxLength="10"
-            />
-            <button
-              className="add-manual-btn"
-              onClick={() => handleManualAdd('sortant')}
-            >
-              Ajouter
-            </button>
-          </div>
-          <div className="scan-buttons-group">
-            <button
-              className="scan-btn sortant"
-              onClick={() => setScanningType('sortant')}
-            >
-              Scanner un écran sortant
-            </button>
-          </div>
+      <div className="scan-section">
+        <div className="type-tabs">
+          <button
+            className={`type-tab ${activeTab === 'sortant' ? 'active' : ''} sortant`}
+            onClick={() => setActiveTab('sortant')}
+          >
+            Écrans Sortants ({sortants.length})
+          </button>
+          <button
+            className={`type-tab ${activeTab === 'entrant' ? 'active' : ''} entrant`}
+            onClick={() => setActiveTab('entrant')}
+          >
+            Écrans Entrants ({entrants.length})
+          </button>
         </div>
 
-        <div className="scan-section">
-          <h2>Écrans Entrants</h2>
-          <div className="codes-list">
-            {entrants.map((code, index) => (
+        <div className="codes-list">
+          {currentCodes.length === 0 ? (
+            <div className="codes-empty">
+              <p>Aucun écran {activeTab === 'sortant' ? 'sortant' : 'entrant'} ajouté</p>
+            </div>
+          ) : (
+            currentCodes.map((code, index) => (
               <div key={index} className="code-item">
                 <span>{code}</span>
                 <button
                   className="remove-btn"
-                  onClick={() => removeCode(code, 'entrant')}
+                  onClick={() => removeCode(code)}
                   aria-label="Supprimer"
                 >
                   ×
                 </button>
               </div>
-            ))}
-          </div>
-          <div className="manual-input-group">
-            <input
-              type="text"
-              className="manual-input"
-              placeholder="Saisir un identifiant (ex: 1234567)"
-              value={manualInput.entrant}
-              onChange={(e) => setManualInput({ ...manualInput, entrant: e.target.value })}
-              onKeyPress={(e) => handleManualInputKeyPress(e, 'entrant')}
-              maxLength="10"
-            />
-            <button
-              className="add-manual-btn"
-              onClick={() => handleManualAdd('entrant')}
-            >
-              Ajouter
-            </button>
-          </div>
-          <div className="scan-buttons-group">
-            <button
-              className="scan-btn entrant"
-              onClick={() => setScanningType('entrant')}
-            >
-              Scanner un écran entrant
-            </button>
-          </div>
+            ))
+          )}
+        </div>
+
+        <div className="manual-input-group">
+          <input
+            type="text"
+            className="manual-input"
+            placeholder="Saisir un identifiant (ex: 1234567)"
+            value={currentInput}
+            onChange={(e) => setManualInput({ ...manualInput, [activeTab]: e.target.value })}
+            onKeyPress={handleManualInputKeyPress}
+            maxLength="10"
+          />
+          <button
+            className="add-manual-btn"
+            onClick={handleManualAdd}
+          >
+            Ajouter
+          </button>
+        </div>
+
+        <div className="scan-buttons-group">
+          <button
+            className={`scan-btn ${activeTab}`}
+            onClick={() => setScanningType(activeTab)}
+          >
+            Scanner un écran {activeTab === 'sortant' ? 'sortant' : 'entrant'}
+          </button>
         </div>
       </div>
 
