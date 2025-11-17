@@ -24,7 +24,6 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>Scan Écran</h1>
         <nav className="tabs">
           <button
             className={`tab ${activeTab === 'scan' ? 'active' : ''}`}

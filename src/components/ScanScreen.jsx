@@ -3,19 +3,6 @@ import BarcodeScanner from './BarcodeScanner'
 import ValidationModal from './ValidationModal'
 import './ScanScreen.css'
 
-const AGENTS = [
-  'Agent 1',
-  'Agent 2',
-  'Agent 3',
-  'Agent 4',
-  'Agent 5',
-  'Agent 6',
-  'Agent 7',
-  'Agent 8',
-  'Agent 9',
-  'Agent 10'
-]
-
 function ScanScreen({ onSave }) {
   const [sortants, setSortants] = useState([])
   const [entrants, setEntrants] = useState([])
@@ -209,7 +196,6 @@ function ScanScreen({ onSave }) {
 
       {showValidation && (
         <ValidationModal
-          agents={AGENTS}
           onSave={handleSave}
           onClose={() => setShowValidation(false)}
         />

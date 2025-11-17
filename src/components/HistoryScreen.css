@@ -59,7 +59,7 @@
 }
 
 .card-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
   padding: 1.25rem 1.5rem;
   display: flex;
@@ -139,7 +139,7 @@
   color: #495057;
   line-height: 1.5;
   margin: 0;
-  border-left: 3px solid #667eea;
+  border-left: 3px solid #3b82f6;
 }
 
 .confirm-dialog-overlay {

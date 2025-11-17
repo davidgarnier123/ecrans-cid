@@ -48,8 +48,8 @@
 
 .type-tab.active {
   color: white;
-  background: #667eea;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  background: #3b82f6;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
 
 .type-tab.sortant.active {
@@ -182,13 +182,13 @@
 
 .manual-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .add-manual-btn {
   padding: 0.75rem 1rem;
-  background: #667eea;
+  background: #3b82f6;
   color: white;
   border: none;
   border-radius: 10px;
@@ -202,7 +202,7 @@
 }
 
 .add-manual-btn:active {
-  background: #5568d3;
+  background: #2563eb;
   transform: scale(0.98);
 }
 
@@ -240,14 +240,14 @@
 }
 
 .validate-btn {
-  background: #667eea;
+  background: #3b82f6;
   color: white;
 }
 
 .validate-btn:active:not(:disabled) {
-  background: #5568d3;
+  background: #2563eb;
   transform: scale(0.98);
-  box-shadow: 0 1px 4px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 1px 4px rgba(59, 130, 246, 0.3);
 }
 
 .validate-btn:disabled {

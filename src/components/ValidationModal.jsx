@@ -2,26 +2,32 @@ import { useState, useEffect } from 'react'
 import './ValidationModal.css'
 
 const SERVICE_STORAGE_KEY = 'lastService'
+const AGENT_STORAGE_KEY = 'lastAgent'
 
-function ValidationModal({ agents, onSave, onClose }) {
-  const [selectedAgent, setSelectedAgent] = useState('')
+function ValidationModal({ onSave, onClose }) {
+  const [agentName, setAgentName] = useState('')
   const [selectedService, setSelectedService] = useState('')
   const [comment, setComment] = useState('')
 
-  // Charger le dernier service utilisé depuis le localStorage
+  // Charger le dernier service et agent utilisés depuis le localStorage
   useEffect(() => {
     const lastService = localStorage.getItem(SERVICE_STORAGE_KEY)
     if (lastService) {
       setSelectedService(lastService)
     }
+    const lastAgent = localStorage.getItem(AGENT_STORAGE_KEY)
+    if (lastAgent) {
+      setAgentName(lastAgent)
+    }
   }, [])
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (selectedAgent && selectedService.trim()) {
-      // Sauvegarder le service pour la prochaine fois
+    if (agentName.trim() && selectedService.trim()) {
+      // Sauvegarder le service et l'agent pour la prochaine fois
       localStorage.setItem(SERVICE_STORAGE_KEY, selectedService.trim())
-      onSave(selectedAgent, selectedService.trim(), comment)
+      localStorage.setItem(AGENT_STORAGE_KEY, agentName.trim())
+      onSave(agentName.trim(), selectedService.trim(), comment)
     }
   }
 
@@ -36,20 +42,15 @@ function ValidationModal({ agents, onSave, onClose }) {
         </div>
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-group">
-            <label htmlFor="agent">Agent *</label>
-            <select
+            <label htmlFor="agent">Nom Prénom *</label>
+            <input
+              type="text"
               id="agent"
-              value={selectedAgent}
-              onChange={(e) => setSelectedAgent(e.target.value)}
+              value={agentName}
+              onChange={(e) => setAgentName(e.target.value)}
+              placeholder="Entrer le nom et prénom"
               required
-            >
-              <option value="">Sélectionner un agent</option>
-              {agents.map((agent) => (
-                <option key={agent} value={agent}>
-                  {agent}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           <div className="form-group">
@@ -79,7 +80,7 @@ function ValidationModal({ agents, onSave, onClose }) {
             <button type="button" className="cancel-btn" onClick={onClose}>
               Annuler
             </button>
-            <button type="submit" className="submit-btn" disabled={!selectedAgent || !selectedService}>
+            <button type="submit" className="submit-btn" disabled={!agentName.trim() || !selectedService.trim()}>
               Enregistrer
             </button>
           </div>
