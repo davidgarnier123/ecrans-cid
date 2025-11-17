@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import './HistoryScreen.css'
 
-function HistoryScreen({ changes }) {
+function HistoryScreen({ changes, onClearHistory }) {
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const formatDate = (dateString) => {
     const date = new Date(dateString)
     return new Intl.DateTimeFormat('fr-FR', {
@@ -20,13 +22,56 @@ function HistoryScreen({ changes }) {
     )
   }
 
+  const handleClearClick = () => {
+    setShowConfirmDialog(true)
+  }
+
+  const handleConfirmClear = () => {
+    onClearHistory()
+    setShowConfirmDialog(false)
+  }
+
+  const handleCancelClear = () => {
+    setShowConfirmDialog(false)
+  }
+
   return (
     <div className="history-screen">
+      {changes.length > 0 && (
+        <div className="history-actions">
+          <button className="clear-btn" onClick={handleClearClick}>
+            Vider la base de données
+          </button>
+        </div>
+      )}
+
+      {showConfirmDialog && (
+        <div className="confirm-dialog-overlay">
+          <div className="confirm-dialog">
+            <h3>Confirmer la suppression</h3>
+            <p>Êtes-vous sûr de vouloir vider toute la base de données ? Cette action est irréversible.</p>
+            <div className="confirm-dialog-actions">
+              <button className="confirm-cancel-btn" onClick={handleCancelClear}>
+                Annuler
+              </button>
+              <button className="confirm-delete-btn" onClick={handleConfirmClear}>
+                Supprimer tout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="history-grid">
         {changes.map((change) => (
           <div key={change.id} className="change-card">
             <div className="card-header">
-              <h3>{change.agent}</h3>
+              <div>
+                <h3>{change.agent}</h3>
+                {change.service && (
+                  <span className="card-service">{change.service}</span>
+                )}
+              </div>
               <span className="card-date">{formatDate(change.date)}</span>
             </div>
             

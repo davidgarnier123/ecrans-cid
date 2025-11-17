@@ -1,14 +1,27 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './ValidationModal.css'
+
+const SERVICE_STORAGE_KEY = 'lastService'
 
 function ValidationModal({ agents, onSave, onClose }) {
   const [selectedAgent, setSelectedAgent] = useState('')
+  const [selectedService, setSelectedService] = useState('')
   const [comment, setComment] = useState('')
+
+  // Charger le dernier service utilisé depuis le localStorage
+  useEffect(() => {
+    const lastService = localStorage.getItem(SERVICE_STORAGE_KEY)
+    if (lastService) {
+      setSelectedService(lastService)
+    }
+  }, [])
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (selectedAgent) {
-      onSave(selectedAgent, comment)
+    if (selectedAgent && selectedService.trim()) {
+      // Sauvegarder le service pour la prochaine fois
+      localStorage.setItem(SERVICE_STORAGE_KEY, selectedService.trim())
+      onSave(selectedAgent, selectedService.trim(), comment)
     }
   }
 
@@ -40,6 +53,18 @@ function ValidationModal({ agents, onSave, onClose }) {
           </div>
 
           <div className="form-group">
+            <label htmlFor="service">Service *</label>
+            <input
+              type="text"
+              id="service"
+              value={selectedService}
+              onChange={(e) => setSelectedService(e.target.value)}
+              placeholder="Entrer le nom du service"
+              required
+            />
+          </div>
+
+          <div className="form-group">
             <label htmlFor="comment">Commentaire (optionnel)</label>
             <textarea
               id="comment"
@@ -54,7 +79,7 @@ function ValidationModal({ agents, onSave, onClose }) {
             <button type="button" className="cancel-btn" onClick={onClose}>
               Annuler
             </button>
-            <button type="submit" className="submit-btn" disabled={!selectedAgent}>
+            <button type="submit" className="submit-btn" disabled={!selectedAgent || !selectedService}>
               Enregistrer
             </button>
           </div>

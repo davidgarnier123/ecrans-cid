@@ -99,6 +99,48 @@
   box-shadow: 0 4px 12px rgba(81, 207, 102, 0.3);
 }
 
+.manual-input-group {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.manual-input {
+  flex: 1;
+  padding: 0.75rem;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: 'Courier New', monospace;
+  transition: border-color 0.2s;
+}
+
+.manual-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.add-manual-btn {
+  padding: 0.75rem 1.25rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.add-manual-btn:hover {
+  background: #5568d3;
+}
+
+.scan-buttons-group {
+  margin-top: 0.5rem;
+}
+
 .actions {
   display: flex;
   gap: 1rem;

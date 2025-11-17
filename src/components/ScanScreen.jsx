@@ -21,6 +21,7 @@ function ScanScreen({ onSave }) {
   const [entrants, setEntrants] = useState([])
   const [scanningType, setScanningType] = useState(null) // 'sortant' ou 'entrant'
   const [showValidation, setShowValidation] = useState(false)
+  const [manualInput, setManualInput] = useState({ sortant: '', entrant: '' })
 
   const handleScan = (code) => {
     if (scanningType === 'sortant') {
@@ -33,6 +34,41 @@ function ScanScreen({ onSave }) {
       }
     }
     setScanningType(null)
+  }
+
+  const handleManualAdd = (type) => {
+    const input = manualInput[type].trim()
+    if (!input) return
+
+    // Validation flexible : généralement 7 chiffres mais accepte d'autres formats
+    const isValid = /^[0-9]{4,10}$/.test(input) // Entre 4 et 10 chiffres
+    
+    if (!isValid) {
+      alert('Veuillez entrer un identifiant valide (généralement 7 chiffres)')
+      return
+    }
+
+    if (type === 'sortant') {
+      if (!sortants.includes(input)) {
+        setSortants([...sortants, input])
+        setManualInput({ ...manualInput, sortant: '' })
+      } else {
+        alert('Cet écran est déjà dans la liste des sortants')
+      }
+    } else {
+      if (!entrants.includes(input)) {
+        setEntrants([...entrants, input])
+        setManualInput({ ...manualInput, entrant: '' })
+      } else {
+        alert('Cet écran est déjà dans la liste des entrants')
+      }
+    }
+  }
+
+  const handleManualInputKeyPress = (e, type) => {
+    if (e.key === 'Enter') {
+      handleManualAdd(type)
+    }
   }
 
   const removeCode = (code, type) => {
@@ -51,13 +87,14 @@ function ScanScreen({ onSave }) {
     }
   }
 
-  const handleSave = (agent, comment) => {
+  const handleSave = (agent, service, comment) => {
     const change = {
       id: Date.now(),
       date: new Date().toISOString(),
       sortants,
       entrants,
       agent,
+      service,
       comment
     }
     onSave(change)
@@ -92,12 +129,31 @@ function ScanScreen({ onSave }) {
               </div>
             ))}
           </div>
-          <button
-            className="scan-btn sortant"
-            onClick={() => setScanningType('sortant')}
-          >
-            Scanner un écran sortant
-          </button>
+          <div className="manual-input-group">
+            <input
+              type="text"
+              className="manual-input"
+              placeholder="Saisir un identifiant (ex: 1234567)"
+              value={manualInput.sortant}
+              onChange={(e) => setManualInput({ ...manualInput, sortant: e.target.value })}
+              onKeyPress={(e) => handleManualInputKeyPress(e, 'sortant')}
+              maxLength="10"
+            />
+            <button
+              className="add-manual-btn"
+              onClick={() => handleManualAdd('sortant')}
+            >
+              Ajouter
+            </button>
+          </div>
+          <div className="scan-buttons-group">
+            <button
+              className="scan-btn sortant"
+              onClick={() => setScanningType('sortant')}
+            >
+              Scanner un écran sortant
+            </button>
+          </div>
         </div>
 
         <div className="scan-section">
@@ -116,12 +172,31 @@ function ScanScreen({ onSave }) {
               </div>
             ))}
           </div>
-          <button
-            className="scan-btn entrant"
-            onClick={() => setScanningType('entrant')}
-          >
-            Scanner un écran entrant
-          </button>
+          <div className="manual-input-group">
+            <input
+              type="text"
+              className="manual-input"
+              placeholder="Saisir un identifiant (ex: 1234567)"
+              value={manualInput.entrant}
+              onChange={(e) => setManualInput({ ...manualInput, entrant: e.target.value })}
+              onKeyPress={(e) => handleManualInputKeyPress(e, 'entrant')}
+              maxLength="10"
+            />
+            <button
+              className="add-manual-btn"
+              onClick={() => handleManualAdd('entrant')}
+            >
+              Ajouter
+            </button>
+          </div>
+          <div className="scan-buttons-group">
+            <button
+              className="scan-btn entrant"
+              onClick={() => setScanningType('entrant')}
+            >
+              Scanner un écran entrant
+            </button>
+          </div>
         </div>
       </div>
 

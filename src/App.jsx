@@ -45,7 +45,13 @@ function App() {
         {activeTab === 'scan' ? (
           <ScanScreen onSave={handleChangeSaved} />
         ) : (
-          <HistoryScreen changes={changes} />
+          <HistoryScreen 
+            changes={changes} 
+            onClearHistory={() => {
+              setChanges([])
+              localStorage.removeItem('screenChanges')
+            }}
+          />
         )}
       </main>
     </div>
