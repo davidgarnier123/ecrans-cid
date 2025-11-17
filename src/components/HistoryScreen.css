@@ -9,18 +9,18 @@
 }
 
 .clear-btn {
-  padding: 1.25rem 1.5rem;
+  padding: 0.875rem 1.5rem;
   background: #dc3545;
   color: white;
   border: none;
-  border-radius: 12px;
-  font-size: 1.1rem;
-  font-weight: 700;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  min-height: 56px;
+  min-height: 44px;
   width: 100%;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .clear-btn:active {
@@ -197,16 +197,16 @@
 
 .confirm-cancel-btn,
 .confirm-delete-btn {
-  padding: 1.25rem 1.5rem;
-  border-radius: 12px;
-  font-size: 1.1rem;
-  font-weight: 700;
+  padding: 0.875rem 1.5rem;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
   border: none;
   width: 100%;
-  min-height: 56px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  min-height: 44px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .confirm-cancel-btn {

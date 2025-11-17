@@ -131,14 +131,14 @@
 
 .cancel-btn,
 .submit-btn {
-  padding: 1.25rem 1.5rem;
-  border-radius: 12px;
-  font-size: 1.1rem;
-  font-weight: 700;
+  padding: 0.875rem 1.5rem;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
   transition: all 0.2s;
   width: 100%;
-  min-height: 56px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  min-height: 44px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .cancel-btn {

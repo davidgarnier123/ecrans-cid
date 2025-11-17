@@ -218,17 +218,17 @@
 }
 
 .cancel-btn {
-  padding: 1.25rem 2rem;
+  padding: 0.875rem 2rem;
   background: #6c757d;
   color: white;
-  border-radius: 12px;
-  font-size: 1.1rem;
-  font-weight: 700;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
   transition: all 0.2s;
-  min-height: 56px;
+  min-height: 44px;
   width: 100%;
   max-width: 300px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .cancel-btn:active {
