@@ -4,20 +4,21 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.95);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 1rem;
+  padding: 0;
 }
 
 .scanner-modal {
-  background: white;
-  border-radius: 12px;
+  background: black;
+  border-radius: 0;
   width: 100%;
-  max-width: 500px;
-  max-height: 90vh;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -28,21 +29,30 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid #e9ecef;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
 }
 
 .scanner-header h3 {
   font-size: 1.25rem;
-  color: #333;
+  color: white;
+  font-weight: 600;
 }
 
 .close-btn {
-  background: transparent;
-  color: #6c757d;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
   font-size: 2rem;
   line-height: 1;
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -50,9 +60,9 @@
   transition: all 0.2s;
 }
 
-.close-btn:hover {
-  background: #f8f9fa;
-  color: #333;
+.close-btn:active {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(0.95);
 }
 
 .scanner-content {
@@ -195,35 +205,34 @@
 }
 
 .scanner-footer {
-  padding: 1rem 1.5rem;
-  border-top: 1px solid #e9ecef;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.8);
   display: flex;
   justify-content: center;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
 }
 
 .cancel-btn {
-  padding: 0.75rem 2rem;
+  padding: 1.25rem 2rem;
   background: #6c757d;
   color: white;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 500;
-  transition: background 0.2s;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  transition: all 0.2s;
+  min-height: 56px;
+  width: 100%;
+  max-width: 300px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-.cancel-btn:hover {
+.cancel-btn:active {
   background: #5a6268;
-}
-
-@media (max-width: 768px) {
-  .scanner-modal {
-    max-width: 100%;
-    max-height: 100vh;
-    border-radius: 0;
-  }
-  
-  .scanner-content {
-    min-height: 300px;
-  }
+  transform: scale(0.98);
 }
 

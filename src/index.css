@@ -2,6 +2,12 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  /* Empêcher le zoom sur double-tap */
+  touch-action: manipulation;
 }
 
 body {
@@ -12,10 +18,13 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: #f5f5f5;
   color: #333;
+  font-size: 16px; /* Empêcher le zoom automatique sur iOS */
+  overflow-x: hidden;
 }
 
 #root {
   min-height: 100vh;
+  min-height: 100dvh; /* Support pour les navigateurs modernes */
 }
 
 button {
@@ -23,10 +32,16 @@ button {
   cursor: pointer;
   border: none;
   outline: none;
+  /* Zone tactile minimale recommandée */
+  min-height: 44px;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
 }
 
 input, select, textarea {
   font-family: inherit;
   outline: none;
+  font-size: 16px; /* Empêcher le zoom automatique sur iOS */
+  -webkit-appearance: none;
+  border-radius: 0;
 }
 
