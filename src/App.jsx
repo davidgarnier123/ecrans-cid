@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import ScanScreen from './components/ScanScreen'
 import HistoryScreen from './components/HistoryScreen'
+import SettingsScreen from './components/SettingsScreen'
 import './App.css'
 
 function App() {
@@ -37,13 +38,19 @@ function App() {
           >
             Historique ({changes.length})
           </button>
+          <button
+            className={`tab ${activeTab === 'settings' ? 'active' : ''}`}
+            onClick={() => setActiveTab('settings')}
+          >
+            Paramètres
+          </button>
         </nav>
       </header>
 
       <main className="app-main">
         {activeTab === 'scan' ? (
           <ScanScreen onSave={handleChangeSaved} />
-        ) : (
+        ) : activeTab === 'history' ? (
           <HistoryScreen 
             changes={changes} 
             onClearHistory={() => {
@@ -51,6 +58,8 @@ function App() {
               localStorage.removeItem('screenChanges')
             }}
           />
+        ) : (
+          <SettingsScreen />
         )}
       </main>
     </div>

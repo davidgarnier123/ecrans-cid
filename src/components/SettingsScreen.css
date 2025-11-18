@@ -1,0 +1,166 @@
+.settings-screen {
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+}
+
+.settings-header {
+  margin-bottom: 1.5rem;
+}
+
+.settings-header h2 {
+  font-size: 1.75rem;
+  color: #333;
+  font-weight: 700;
+  margin: 0;
+}
+
+.settings-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.settings-section {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.settings-section h3 {
+  font-size: 1.25rem;
+  color: #333;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+}
+
+.settings-description {
+  color: #666;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0 0 1.5rem 0;
+}
+
+.agent-info {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #333;
+}
+
+.info-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #3b82f6;
+}
+
+.upload-section {
+  margin-bottom: 1.5rem;
+}
+
+.upload-label {
+  display: block;
+  cursor: pointer;
+}
+
+.upload-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.2s;
+  min-height: 48px;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.upload-button:active {
+  transform: scale(0.98);
+  box-shadow: 0 1px 4px rgba(59, 130, 246, 0.3);
+}
+
+.upload-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.upload-icon,
+.upload-spinner {
+  font-size: 1.25rem;
+}
+
+.message {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.message.success {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+}
+
+.message.error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.csv-format-info {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.csv-format-info h4 {
+  font-size: 1rem;
+  color: #333;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+}
+
+.csv-example {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  overflow-x: auto;
+}
+
+.csv-example code {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: #333;
+  white-space: pre;
+  line-height: 1.8;
+}
+
+.csv-note {
+  color: #666;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
