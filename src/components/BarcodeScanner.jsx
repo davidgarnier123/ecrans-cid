@@ -309,17 +309,12 @@ function BarcodeScanner({ type, onScan, onClose }) {
                   {scanCount} / {REQUIRED_SCANS} scans
                 </div>
                 {manualCode && !isValidating && (
-                  <div className="manual-validation-card">
-                    <div className="manual-validation-content">
-                      <p className="manual-validation-label">Code détecté :</p>
-                      <p className="manual-validation-code">{manualCode}</p>
-                      <button 
-                        className="manual-validation-btn"
-                        onClick={handleManualValidation}
-                      >
-                        Valider ce code
-                      </button>
-                    </div>
+                  <div 
+                    className="manual-validation-code"
+                    onClick={handleManualValidation}
+                    title="Appuyez pour valider ce code"
+                  >
+                    {manualCode}
                   </div>
                 )}
               </div>
