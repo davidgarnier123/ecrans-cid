@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { Html5Qrcode } from 'html5-qrcode'
 import './BarcodeScanner.css'
 
-const REQUIRED_SCANS = 3 // Nombre de scans consécutifs requis pour valider
+const REQUIRED_SCANS = 2 // Nombre de scans consécutifs requis pour valider
 
 function BarcodeScanner({ type, onScan, onClose }) {
   const scannerRef = useRef(null)
@@ -38,6 +38,57 @@ function BarcodeScanner({ type, onScan, onClose }) {
     if (scanTimeoutRef.current) {
       clearTimeout(scanTimeoutRef.current)
       scanTimeoutRef.current = null
+    }
+  }, [])
+
+  const applyCameraEnhancements = useCallback(async () => {
+    const html5QrCode = html5QrCodeRef.current
+    if (!html5QrCode) {
+      return
+    }
+
+    try {
+      const runningTrack = html5QrCode.getRunningTrack?.()
+      const capabilities =
+        runningTrack?.getCapabilities?.() ?? html5QrCode.getRunningTrackCapabilities?.()
+
+      if (!capabilities) {
+        return
+      }
+
+      const desiredConstraints = {}
+
+      if (capabilities.focusMode) {
+        if (Array.isArray(capabilities.focusMode)) {
+          if (capabilities.focusMode.includes('continuous')) {
+            desiredConstraints.focusMode = 'continuous'
+          } else if (capabilities.focusMode.includes('auto')) {
+            desiredConstraints.focusMode = 'auto'
+          }
+        } else if (typeof capabilities.focusMode === 'string') {
+          desiredConstraints.focusMode = capabilities.focusMode
+        }
+      }
+
+      if (capabilities.zoom) {
+        const preferredZoom = Math.min(
+          Math.max(capabilities.zoom.min ?? 1.0, 1.5),
+          capabilities.zoom.max ?? 2.0
+        )
+        desiredConstraints.zoom = preferredZoom
+      }
+
+      if (Object.keys(desiredConstraints).length === 0) {
+        return
+      }
+
+      if (runningTrack?.applyConstraints) {
+        await runningTrack.applyConstraints({ advanced: [desiredConstraints] })
+      } else if (html5QrCode.applyVideoConstraints) {
+        await html5QrCode.applyVideoConstraints({ advanced: [desiredConstraints] })
+      }
+    } catch (err) {
+      console.warn('Impossible d\'appliquer les contraintes caméra:', err)
     }
   }, [])
 
@@ -115,16 +166,23 @@ function BarcodeScanner({ type, onScan, onClose }) {
         vibrate([50, 50, 50])
 
         await html5QrCode.start(
-          { facingMode: 'environment' },
           {
-            fps: 10,
-            qrbox: { width: 250, height: 250 }
+            facingMode: 'environment',
+            focusMode: 'continuous',
+            advanced: [{ focusMode: 'continuous' }]
+          },
+          {
+            fps: 12,
+            qrbox: { width: 280, height: 280 },
+            aspectRatio: 1.333,
+            disableFlip: true
           },
           handleCodeScanned,
           (errorMessage) => {
             // Ignorer les erreurs de scan continu
           }
         )
+        await applyCameraEnhancements()
         isScanningRef.current = true
         setError(null)
       } catch (err) {
@@ -141,7 +199,7 @@ function BarcodeScanner({ type, onScan, onClose }) {
     return () => {
       stopScanning()
     }
-  }, [type, handleCodeScanned, stopScanning, vibrate])
+  }, [type, handleCodeScanned, stopScanning, vibrate, applyCameraEnhancements])
 
   const handleClose = async () => {
     await stopScanning()
