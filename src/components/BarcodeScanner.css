@@ -185,86 +185,6 @@
   font-weight: 500;
 }
 
-.scanner-photo-actions {
-  margin-top: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.photo-btn {
-  background: #2d9cdb;
-  border: none;
-  color: white;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.photo-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.photo-btn:not(:disabled):hover {
-  background: #1f7fb5;
-}
-
-.photo-error {
-  color: #ff6b6b;
-  font-size: 0.9rem;
-}
-
-.photo-preview {
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  overflow: hidden;
-  max-height: 200px;
-}
-
-.photo-preview img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-.photo-result {
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  padding: 0.75rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.photo-result p {
-  margin: 0;
-  color: white;
-  font-size: 1rem;
-}
-
-.photo-result button {
-  border: none;
-  padding: 0.6rem 0.9rem;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  cursor: pointer;
-}
-
-.photo-confirm-btn {
-  background: #51cf66;
-  color: #0b2a19;
-  font-weight: 600;
-}
-
-.photo-reset-btn {
-  background: rgba(255, 255, 255, 0.15);
-  color: white;
-}
-
 .scanner-error {
   text-align: center;
   padding: 2rem;
@@ -314,5 +234,79 @@
 .cancel-btn:active {
   background: #5a6268;
   transform: scale(0.98);
+}
+
+.manual-validation-card {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(59, 130, 246, 0.1);
+  border: 2px solid #3b82f6;
+  border-radius: 12px;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.manual-validation-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.manual-validation-label {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+  font-weight: 500;
+}
+
+.manual-validation-code {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #3b82f6;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.1em;
+  margin: 0;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.manual-validation-btn {
+  padding: 0.875rem 2rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 44px;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  width: 100%;
+  max-width: 300px;
+}
+
+.manual-validation-btn:active {
+  background: #2563eb;
+  transform: scale(0.98);
+  box-shadow: 0 1px 4px rgba(59, 130, 246, 0.3);
+}
+
+.manual-validation-btn:hover {
+  background: #2563eb;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
 }
 

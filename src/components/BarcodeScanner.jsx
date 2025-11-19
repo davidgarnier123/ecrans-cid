@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { Html5Qrcode } from 'html5-qrcode'
-import Tesseract from 'tesseract.js'
 import './BarcodeScanner.css'
 
 const REQUIRED_SCANS = 2 // Nombre de scans consécutifs requis pour valider
@@ -13,10 +12,7 @@ function BarcodeScanner({ type, onScan, onClose }) {
   const [currentCode, setCurrentCode] = useState(null)
   const [scanCount, setScanCount] = useState(0)
   const [isValidating, setIsValidating] = useState(false)
-  const [photoStatus, setPhotoStatus] = useState('idle') // idle | processing | done | error
-  const [photoCandidate, setPhotoCandidate] = useState(null)
-  const [photoError, setPhotoError] = useState(null)
-  const [photoPreview, setPhotoPreview] = useState(null)
+  const [manualCode, setManualCode] = useState(null) // Code proposé pour validation manuelle
   const lastScanTimeRef = useRef(0)
   const scanTimeoutRef = useRef(null)
   const currentCodeRef = useRef(null)
@@ -106,8 +102,8 @@ function BarcodeScanner({ type, onScan, onClose }) {
   const handleCodeScanned = useCallback((decodedText) => {
     const now = Date.now()
     
-    // Ignorer les scans trop rapides (moins de 200ms entre chaque scan)
-    if (now - lastScanTimeRef.current < 200) {
+    // Ignorer les scans trop rapides (moins de 150ms entre chaque scan)
+    if (now - lastScanTimeRef.current < 150) {
       return
     }
     lastScanTimeRef.current = now
@@ -137,13 +133,14 @@ function BarcodeScanner({ type, onScan, onClose }) {
         if (scanTimeoutRef.current) {
           clearTimeout(scanTimeoutRef.current)
         }
-        // Si pas de nouveau scan dans les 2 secondes, réinitialiser
+        // Si pas de nouveau scan dans les 3 secondes, réinitialiser
         scanTimeoutRef.current = setTimeout(() => {
           currentCodeRef.current = null
           scanCountRef.current = 0
           setCurrentCode(null)
           setScanCount(0)
-        }, 2000)
+          setManualCode(null)
+        }, 3000)
       }
     } else {
       // Nouveau code détecté, réinitialiser
@@ -151,6 +148,8 @@ function BarcodeScanner({ type, onScan, onClose }) {
       scanCountRef.current = 1
       setCurrentCode(decodedText)
       setScanCount(1)
+      // Afficher le code pour validation manuelle dès le premier scan
+      setManualCode(decodedText)
       // Vibration courte pour indiquer qu'un nouveau code est détecté
       vibrate(30)
 
@@ -163,9 +162,17 @@ function BarcodeScanner({ type, onScan, onClose }) {
         scanCountRef.current = 0
         setCurrentCode(null)
         setScanCount(0)
-      }, 2000)
+        setManualCode(null)
+      }, 3000)
     }
   }, [onScan, stopScanning, vibrate])
+
+  const handleManualValidation = useCallback(() => {
+    if (manualCode) {
+      onScan(manualCode)
+      stopScanning()
+    }
+  }, [manualCode, onScan, stopScanning])
 
   useEffect(() => {
     const startScanning = async () => {
@@ -177,12 +184,26 @@ function BarcodeScanner({ type, onScan, onClose }) {
         vibrate([50, 50, 50])
 
         await html5QrCode.start(
-          { facingMode: 'environment' },
+          { 
+            facingMode: 'environment',
+            // Améliorer la qualité de la vidéo pour une meilleure détection
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
           {
-            fps: 12,
-            qrbox: { width: 280, height: 280 },
-            aspectRatio: 1.333,
-            disableFlip: true
+            fps: 30, // Augmenter le framerate pour plus de chances de détection
+            qrbox: function(viewfinderWidth, viewfinderHeight) {
+              // Utiliser une zone de scan plus grande (80% de la vue)
+              const minEdgePercentage = 0.8
+              const minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight)
+              const qrboxSize = Math.floor(minEdgeSize * minEdgePercentage)
+              return {
+                width: qrboxSize,
+                height: qrboxSize
+              }
+            },
+            aspectRatio: 1.0, // Ratio carré pour une meilleure détection
+            disableFlip: false // Permettre le retournement pour une meilleure détection
           },
           handleCodeScanned,
           (errorMessage) => {
@@ -211,65 +232,6 @@ function BarcodeScanner({ type, onScan, onClose }) {
     }
   }, [type, handleCodeScanned, stopScanning, vibrate, applyCameraEnhancements])
 
-  const extractCandidateFromText = (text) => {
-    if (!text) {
-      return null
-    }
-    const match = text.match(/\b\d{7}\b/)
-    return match ? match[0] : null
-  }
-
-  const handleCapturePhoto = useCallback(async () => {
-    if (!scannerRef.current) {
-      setPhotoError('Caméra non disponible')
-      return
-    }
-
-    const videoElement = scannerRef.current.querySelector('video')
-    if (!videoElement || videoElement.readyState < 2) {
-      setPhotoError('Flux vidéo non prêt')
-      return
-    }
-
-    try {
-      setPhotoStatus('processing')
-      setPhotoError(null)
-      setPhotoCandidate(null)
-
-      const canvas = document.createElement('canvas')
-      canvas.width = videoElement.videoWidth || 640
-      canvas.height = videoElement.videoHeight || 480
-      const ctx = canvas.getContext('2d')
-      ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height)
-
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.9)
-      setPhotoPreview(dataUrl)
-
-      const { data } = await Tesseract.recognize(canvas, 'eng', {
-        tessedit_char_whitelist: '0123456789'
-      })
-
-      const candidate = extractCandidateFromText(data.text)
-      if (candidate) {
-        setPhotoCandidate(candidate)
-        setPhotoStatus('done')
-      } else {
-        setPhotoStatus('done')
-        setPhotoError('Aucun identifiant de 7 chiffres détecté.')
-      }
-    } catch (err) {
-      console.error('Erreur OCR:', err)
-      setPhotoStatus('error')
-      setPhotoError('Impossible d\'analyser la photo.')
-    }
-  }, [])
-
-  const handlePhotoConfirm = () => {
-    if (photoCandidate) {
-      onScan(photoCandidate)
-    }
-  }
-
   const handleClose = async () => {
     await stopScanning()
     // Réinitialiser les états
@@ -278,10 +240,7 @@ function BarcodeScanner({ type, onScan, onClose }) {
     setCurrentCode(null)
     setScanCount(0)
     setIsValidating(false)
-    setPhotoStatus('idle')
-    setPhotoCandidate(null)
-    setPhotoError(null)
-    setPhotoPreview(null)
+    setManualCode(null)
     onClose()
   }
 
@@ -333,40 +292,20 @@ function BarcodeScanner({ type, onScan, onClose }) {
                 <div className="scanner-progress-text">
                   {scanCount} / {REQUIRED_SCANS} scans
                 </div>
-                <div className="scanner-photo-actions">
-                  <button
-                    className="photo-btn"
-                    onClick={handleCapturePhoto}
-                    disabled={photoStatus === 'processing'}
-                  >
-                    {photoStatus === 'processing' ? 'Analyse en cours...' : 'Analyser une photo'}
-                  </button>
-                  {photoError && <span className="photo-error">{photoError}</span>}
-                  {photoPreview && (
-                    <div className="photo-preview">
-                      <img src={photoPreview} alt="Capture" />
-                    </div>
-                  )}
-                  {photoCandidate && (
-                    <div className="photo-result">
-                      <p>Code détecté : <strong>{photoCandidate}</strong></p>
-                      <button className="photo-confirm-btn" onClick={handlePhotoConfirm}>
-                        Utiliser ce code
-                      </button>
-                      <button
-                        className="photo-reset-btn"
-                        onClick={() => {
-                          setPhotoCandidate(null)
-                          setPhotoPreview(null)
-                          setPhotoStatus('idle')
-                          setPhotoError(null)
-                        }}
+                {manualCode && !isValidating && (
+                  <div className="manual-validation-card">
+                    <div className="manual-validation-content">
+                      <p className="manual-validation-label">Code détecté :</p>
+                      <p className="manual-validation-code">{manualCode}</p>
+                      <button 
+                        className="manual-validation-btn"
+                        onClick={handleManualValidation}
                       >
-                        Ignorer
+                        Valider ce code
                       </button>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </>
           )}
