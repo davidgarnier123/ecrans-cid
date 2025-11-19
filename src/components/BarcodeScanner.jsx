@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { Html5Qrcode } from 'html5-qrcode'
+import { getScanSettings } from '../utils/scanSettings'
 import './BarcodeScanner.css'
 
 const REQUIRED_SCANS = 2 // Nombre de scans consécutifs requis pour valider
@@ -17,6 +18,7 @@ function BarcodeScanner({ type, onScan, onClose }) {
   const scanTimeoutRef = useRef(null)
   const currentCodeRef = useRef(null)
   const scanCountRef = useRef(0)
+  const scanSettingsRef = useRef(getScanSettings())
 
   // Fonction pour vibrer le téléphone
   const vibrate = useCallback((pattern) => {
@@ -121,10 +123,13 @@ function BarcodeScanner({ type, onScan, onClose }) {
   }, [])
 
   const handleCodeScanned = useCallback((decodedText) => {
+    // Recharger les paramètres au cas où ils ont changé
+    scanSettingsRef.current = getScanSettings()
+    const settings = scanSettingsRef.current
     const now = Date.now()
     
-    // Ignorer les scans trop rapides (moins de 150ms entre chaque scan)
-    if (now - lastScanTimeRef.current < 150) {
+    // Ignorer les scans trop rapides selon le délai configuré
+    if (now - lastScanTimeRef.current < settings.scanDelay) {
       return
     }
     lastScanTimeRef.current = now
@@ -198,6 +203,10 @@ function BarcodeScanner({ type, onScan, onClose }) {
   useEffect(() => {
     const startScanning = async () => {
       try {
+        // Charger les paramètres de scan et les stocker dans le ref
+        scanSettingsRef.current = getScanSettings()
+        const settings = scanSettingsRef.current
+        
         const html5QrCode = new Html5Qrcode(scannerRef.current.id)
         html5QrCodeRef.current = html5QrCode
 
@@ -207,10 +216,10 @@ function BarcodeScanner({ type, onScan, onClose }) {
         await html5QrCode.start(
           { facingMode: 'environment' },
           {
-            fps: 30, // Augmenter le framerate pour plus de chances de détection
+            fps: settings.fps,
             qrbox: function(viewfinderWidth, viewfinderHeight) {
-              // Utiliser une zone de scan plus grande (80% de la vue)
-              const minEdgePercentage = 0.8
+              // Utiliser le pourcentage configuré pour la zone de scan
+              const minEdgePercentage = settings.qrboxPercentage / 100
               const minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight)
               const qrboxSize = Math.floor(minEdgeSize * minEdgePercentage)
               return {
@@ -218,8 +227,8 @@ function BarcodeScanner({ type, onScan, onClose }) {
                 height: qrboxSize
               }
             },
-            aspectRatio: 1.0, // Ratio carré pour une meilleure détection
-            disableFlip: false // Permettre le retournement pour une meilleure détection
+            aspectRatio: settings.aspectRatio,
+            disableFlip: true // Toujours désactiver le retournement, utiliser uniquement la caméra arrière
           },
           handleCodeScanned,
           (errorMessage) => {

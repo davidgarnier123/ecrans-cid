@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { saveAgentsFromCSV, getAgentCount } from '../utils/agentDB'
+import { getScanSettings, saveScanSettings, resetScanSettings } from '../utils/scanSettings'
 import './SettingsScreen.css'
 
 function SettingsScreen() {
@@ -7,9 +8,13 @@ function SettingsScreen() {
   const [uploading, setUploading] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
   const [fileName, setFileName] = useState('')
+  const [scanSettings, setScanSettings] = useState(getScanSettings())
+  const [scanSettingsMessage, setScanSettingsMessage] = useState({ type: '', text: '' })
 
   useEffect(() => {
     loadAgentCount()
+    // Charger les paramètres de scan
+    setScanSettings(getScanSettings())
   }, [])
 
   const loadAgentCount = async () => {
@@ -49,6 +54,21 @@ function SettingsScreen() {
       // Réinitialiser l'input pour permettre de ré-uploader le même fichier
       event.target.value = ''
     }
+  }
+
+  const handleScanSettingChange = (key, value) => {
+    const newSettings = { ...scanSettings, [key]: value }
+    setScanSettings(newSettings)
+    saveScanSettings(newSettings)
+    setScanSettingsMessage({ type: 'success', text: 'Paramètres sauvegardés' })
+    setTimeout(() => setScanSettingsMessage({ type: '', text: '' }), 2000)
+  }
+
+  const handleResetScanSettings = () => {
+    const defaultSettings = resetScanSettings()
+    setScanSettings(defaultSettings)
+    setScanSettingsMessage({ type: 'success', text: 'Paramètres réinitialisés aux valeurs par défaut' })
+    setTimeout(() => setScanSettingsMessage({ type: '', text: '' }), 2000)
   }
 
   return (
@@ -118,6 +138,108 @@ function SettingsScreen() {
               Le séparateur peut être une virgule (,) ou un point-virgule (;).
               La première ligne doit contenir les en-têtes "service" et "nom".
             </p>
+          </div>
+        </div>
+
+        <div className="settings-section">
+          <h3>Paramètres de scan</h3>
+          <p className="settings-description">
+            Ajustez les paramètres de détection des codes-barres pour améliorer les performances selon votre environnement.
+          </p>
+
+          {scanSettingsMessage.text && (
+            <div className={`message ${scanSettingsMessage.type}`}>
+              {scanSettingsMessage.type === 'success' ? '✓' : '✗'} {scanSettingsMessage.text}
+            </div>
+          )}
+
+          <div className="scan-settings-grid">
+            <div className="setting-item">
+              <label className="setting-label">
+                <span>Framerate (FPS)</span>
+                <span className="setting-value">{scanSettings.fps}</span>
+              </label>
+              <input
+                type="range"
+                min="10"
+                max="60"
+                step="5"
+                value={scanSettings.fps}
+                onChange={(e) => handleScanSettingChange('fps', parseInt(e.target.value))}
+                className="setting-slider"
+              />
+              <div className="setting-range">
+                <span>10</span>
+                <span>60</span>
+              </div>
+              <p className="setting-hint">Plus élevé = plus de chances de détection, mais plus de consommation</p>
+            </div>
+
+            <div className="setting-item">
+              <label className="setting-label">
+                <span>Taille de la zone de scan (%)</span>
+                <span className="setting-value">{scanSettings.qrboxPercentage}%</span>
+              </label>
+              <input
+                type="range"
+                min="50"
+                max="100"
+                step="5"
+                value={scanSettings.qrboxPercentage}
+                onChange={(e) => handleScanSettingChange('qrboxPercentage', parseInt(e.target.value))}
+                className="setting-slider"
+              />
+              <div className="setting-range">
+                <span>50%</span>
+                <span>100%</span>
+              </div>
+              <p className="setting-hint">Zone plus grande = détection plus facile, mais peut être moins précise</p>
+            </div>
+
+            <div className="setting-item">
+              <label className="setting-label">
+                <span>Délai entre scans (ms)</span>
+                <span className="setting-value">{scanSettings.scanDelay}ms</span>
+              </label>
+              <input
+                type="range"
+                min="100"
+                max="500"
+                step="50"
+                value={scanSettings.scanDelay}
+                onChange={(e) => handleScanSettingChange('scanDelay', parseInt(e.target.value))}
+                className="setting-slider"
+              />
+              <div className="setting-range">
+                <span>100ms</span>
+                <span>500ms</span>
+              </div>
+              <p className="setting-hint">Délai plus court = détection plus rapide, mais peut être moins stable</p>
+            </div>
+
+            <div className="setting-item">
+              <label className="setting-label">
+                <span>Ratio d'aspect</span>
+              </label>
+              <select
+                value={scanSettings.aspectRatio}
+                onChange={(e) => handleScanSettingChange('aspectRatio', parseFloat(e.target.value))}
+                className="setting-select"
+              >
+                <option value="1.0">1:1 (Carré)</option>
+                <option value="1.333">4:3</option>
+                <option value="1.5">3:2</option>
+                <option value="1.777">16:9</option>
+              </select>
+              <p className="setting-hint">Ratio carré généralement meilleur pour les codes-barres</p>
+            </div>
+
+          </div>
+
+          <div className="settings-actions">
+            <button onClick={handleResetScanSettings} className="reset-settings-btn">
+              Réinitialiser aux valeurs par défaut
+            </button>
           </div>
         </div>
       </div>
