@@ -90,6 +90,27 @@ function BarcodeScanner({ type, onScan, onClose }) {
         desiredConstraints.zoom = preferredZoom
       }
 
+      // Essayer d'améliorer la résolution si disponible
+      if (capabilities.width && capabilities.height) {
+        // Essayer d'obtenir une résolution plus élevée si disponible
+        const widthConstraints = capabilities.width
+        const heightConstraints = capabilities.height
+        
+        if (typeof widthConstraints === 'object' && widthConstraints.max) {
+          const idealWidth = Math.min(widthConstraints.max, 1280)
+          if (idealWidth >= 640) {
+            desiredConstraints.width = { ideal: idealWidth }
+          }
+        }
+        
+        if (typeof heightConstraints === 'object' && heightConstraints.max) {
+          const idealHeight = Math.min(heightConstraints.max, 720)
+          if (idealHeight >= 480) {
+            desiredConstraints.height = { ideal: idealHeight }
+          }
+        }
+      }
+
       // Appliquer les contraintes si on en a
       if (Object.keys(desiredConstraints).length > 0) {
         await videoTrack.applyConstraints({ advanced: [desiredConstraints] })
@@ -184,12 +205,7 @@ function BarcodeScanner({ type, onScan, onClose }) {
         vibrate([50, 50, 50])
 
         await html5QrCode.start(
-          { 
-            facingMode: 'environment',
-            // Améliorer la qualité de la vidéo pour une meilleure détection
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          },
+          { facingMode: 'environment' },
           {
             fps: 30, // Augmenter le framerate pour plus de chances de détection
             qrbox: function(viewfinderWidth, viewfinderHeight) {
