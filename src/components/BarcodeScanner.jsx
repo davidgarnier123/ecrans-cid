@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { Html5Qrcode } from 'html5-qrcode'
+import Tesseract from 'tesseract.js'
 import './BarcodeScanner.css'
 
 const REQUIRED_SCANS = 2 // Nombre de scans consécutifs requis pour valider
@@ -12,6 +13,10 @@ function BarcodeScanner({ type, onScan, onClose }) {
   const [currentCode, setCurrentCode] = useState(null)
   const [scanCount, setScanCount] = useState(0)
   const [isValidating, setIsValidating] = useState(false)
+  const [photoStatus, setPhotoStatus] = useState('idle') // idle | processing | done | error
+  const [photoCandidate, setPhotoCandidate] = useState(null)
+  const [photoError, setPhotoError] = useState(null)
+  const [photoPreview, setPhotoPreview] = useState(null)
   const lastScanTimeRef = useRef(0)
   const scanTimeoutRef = useRef(null)
   const currentCodeRef = useRef(null)
@@ -206,6 +211,65 @@ function BarcodeScanner({ type, onScan, onClose }) {
     }
   }, [type, handleCodeScanned, stopScanning, vibrate, applyCameraEnhancements])
 
+  const extractCandidateFromText = (text) => {
+    if (!text) {
+      return null
+    }
+    const match = text.match(/\b\d{7}\b/)
+    return match ? match[0] : null
+  }
+
+  const handleCapturePhoto = useCallback(async () => {
+    if (!scannerRef.current) {
+      setPhotoError('Caméra non disponible')
+      return
+    }
+
+    const videoElement = scannerRef.current.querySelector('video')
+    if (!videoElement || videoElement.readyState < 2) {
+      setPhotoError('Flux vidéo non prêt')
+      return
+    }
+
+    try {
+      setPhotoStatus('processing')
+      setPhotoError(null)
+      setPhotoCandidate(null)
+
+      const canvas = document.createElement('canvas')
+      canvas.width = videoElement.videoWidth || 640
+      canvas.height = videoElement.videoHeight || 480
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height)
+
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.9)
+      setPhotoPreview(dataUrl)
+
+      const { data } = await Tesseract.recognize(canvas, 'eng', {
+        tessedit_char_whitelist: '0123456789'
+      })
+
+      const candidate = extractCandidateFromText(data.text)
+      if (candidate) {
+        setPhotoCandidate(candidate)
+        setPhotoStatus('done')
+      } else {
+        setPhotoStatus('done')
+        setPhotoError('Aucun identifiant de 7 chiffres détecté.')
+      }
+    } catch (err) {
+      console.error('Erreur OCR:', err)
+      setPhotoStatus('error')
+      setPhotoError('Impossible d\'analyser la photo.')
+    }
+  }, [])
+
+  const handlePhotoConfirm = () => {
+    if (photoCandidate) {
+      onScan(photoCandidate)
+    }
+  }
+
   const handleClose = async () => {
     await stopScanning()
     // Réinitialiser les états
@@ -214,6 +278,10 @@ function BarcodeScanner({ type, onScan, onClose }) {
     setCurrentCode(null)
     setScanCount(0)
     setIsValidating(false)
+    setPhotoStatus('idle')
+    setPhotoCandidate(null)
+    setPhotoError(null)
+    setPhotoPreview(null)
     onClose()
   }
 
@@ -264,6 +332,40 @@ function BarcodeScanner({ type, onScan, onClose }) {
                 </div>
                 <div className="scanner-progress-text">
                   {scanCount} / {REQUIRED_SCANS} scans
+                </div>
+                <div className="scanner-photo-actions">
+                  <button
+                    className="photo-btn"
+                    onClick={handleCapturePhoto}
+                    disabled={photoStatus === 'processing'}
+                  >
+                    {photoStatus === 'processing' ? 'Analyse en cours...' : 'Analyser une photo'}
+                  </button>
+                  {photoError && <span className="photo-error">{photoError}</span>}
+                  {photoPreview && (
+                    <div className="photo-preview">
+                      <img src={photoPreview} alt="Capture" />
+                    </div>
+                  )}
+                  {photoCandidate && (
+                    <div className="photo-result">
+                      <p>Code détecté : <strong>{photoCandidate}</strong></p>
+                      <button className="photo-confirm-btn" onClick={handlePhotoConfirm}>
+                        Utiliser ce code
+                      </button>
+                      <button
+                        className="photo-reset-btn"
+                        onClick={() => {
+                          setPhotoCandidate(null)
+                          setPhotoPreview(null)
+                          setPhotoStatus('idle')
+                          setPhotoError(null)
+                        }}
+                      >
+                        Ignorer
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </>
