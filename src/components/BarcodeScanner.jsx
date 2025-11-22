@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { BrowserMultiFormatReader, NotFoundException } from '@zxing/library'
+import { BrowserMultiFormatReader, NotFoundException, BarcodeFormat, DecodeHintType } from '@zxing/library'
 import { getScanSettings } from '../utils/scanSettings'
 import './BarcodeScanner.css'
 
@@ -44,7 +44,7 @@ function BarcodeScanner({ type, onScan, onClose }) {
     scanSettingsRef.current = getScanSettings()
     const settings = scanSettingsRef.current
     const now = Date.now()
-    
+
     // Ignorer les scans trop rapides selon le délai configuré
     if (now - lastScanTimeRef.current < settings.scanDelay) {
       return
@@ -65,7 +65,7 @@ function BarcodeScanner({ type, onScan, onClose }) {
         setIsValidating(true)
         // Vibration longue pour la validation finale
         vibrate([100, 50, 100])
-        
+
         // Attendre un peu pour montrer la validation, puis valider
         setTimeout(() => {
           onScan(decodedText)
@@ -120,15 +120,19 @@ function BarcodeScanner({ type, onScan, onClose }) {
   useEffect(() => {
     const startScanning = async () => {
       try {
-        const codeReader = new BrowserMultiFormatReader()
+        const hints = new Map()
+        hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.CODE_128])
+        hints.set(DecodeHintType.TRY_HARDER, true)
+
+        const codeReader = new BrowserMultiFormatReader(hints)
         codeReaderRef.current = codeReader
-        
+
         // Vibration au démarrage du scanner
         vibrate([50, 50, 50])
 
         const videoInputDevices = await codeReader.listVideoInputDevices()
         // Prefer environment facing camera
-        const selectedDeviceId = videoInputDevices.find(device => device.label.toLowerCase().includes('back'))?.deviceId 
+        const selectedDeviceId = videoInputDevices.find(device => device.label.toLowerCase().includes('back'))?.deviceId
           || videoInputDevices[0].deviceId
 
         await codeReader.decodeFromVideoDevice(
@@ -143,7 +147,7 @@ function BarcodeScanner({ type, onScan, onClose }) {
             }
           }
         )
-        
+
         isScanningRef.current = true
         setError(null)
       } catch (err) {
@@ -196,12 +200,12 @@ function BarcodeScanner({ type, onScan, onClose }) {
           ) : (
             <>
               <div className="scanner-view-container">
-                 <video 
-                    id="scanner-video" 
-                    ref={scannerRef} 
-                    className="scanner-view" 
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                 />
+                <video
+                  id="scanner-video"
+                  ref={scannerRef}
+                  className="scanner-view"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
               </div>
               <div className="scanner-progress-container">
                 <div className="scanner-progress-info">
@@ -230,7 +234,7 @@ function BarcodeScanner({ type, onScan, onClose }) {
                   {scanCount} / {REQUIRED_SCANS} scans
                 </div>
                 {manualCode && !isValidating && (
-                  <div 
+                  <div
                     className="manual-validation-code"
                     onClick={handleManualValidation}
                     title="Appuyez pour valider ce code"
