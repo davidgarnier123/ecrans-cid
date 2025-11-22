@@ -121,7 +121,15 @@ function BarcodeScanner({ type, onScan, onClose }) {
     const startScanning = async () => {
       try {
         const hints = new Map()
-        hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.CODE_128])
+        const formats = [
+          BarcodeFormat.CODE_128,
+          BarcodeFormat.CODE_39,
+          BarcodeFormat.EAN_13,
+          BarcodeFormat.EAN_8,
+          BarcodeFormat.ITF,
+          BarcodeFormat.CODABAR
+        ]
+        hints.set(DecodeHintType.POSSIBLE_FORMATS, formats)
         hints.set(DecodeHintType.TRY_HARDER, true)
 
         const codeReader = new BrowserMultiFormatReader(hints)
@@ -140,6 +148,7 @@ function BarcodeScanner({ type, onScan, onClose }) {
           scannerRef.current,
           (result, err) => {
             if (result) {
+              console.log('Barcode detected:', result.getText(), 'Format:', result.getBarcodeFormat())
               handleCodeScanned(result.getText())
             }
             if (err && !(err instanceof NotFoundException)) {
