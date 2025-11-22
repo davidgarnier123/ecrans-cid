@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { Html5Qrcode } from 'html5-qrcode'
+import { BrowserMultiFormatReader, NotFoundException } from '@zxing/library'
 import { getScanSettings } from '../utils/scanSettings'
 import './BarcodeScanner.css'
 
@@ -7,7 +7,7 @@ const REQUIRED_SCANS = 2 // Nombre de scans consécutifs requis pour valider
 
 function BarcodeScanner({ type, onScan, onClose }) {
   const scannerRef = useRef(null)
-  const html5QrCodeRef = useRef(null)
+  const codeReaderRef = useRef(null)
   const isScanningRef = useRef(false)
   const [error, setError] = useState(null)
   const [currentCode, setCurrentCode] = useState(null)
@@ -27,98 +27,15 @@ function BarcodeScanner({ type, onScan, onClose }) {
     }
   }, [])
 
-  const stopScanning = useCallback(async () => {
-    if (html5QrCodeRef.current && isScanningRef.current) {
-      try {
-        await html5QrCodeRef.current.stop()
-        await html5QrCodeRef.current.clear()
-        html5QrCodeRef.current = null
-        isScanningRef.current = false
-      } catch (err) {
-        console.error('Erreur lors de l\'arrêt du scanner:', err)
-      }
+  const stopScanning = useCallback(() => {
+    if (codeReaderRef.current) {
+      codeReaderRef.current.reset()
+      codeReaderRef.current = null
+      isScanningRef.current = false
     }
     if (scanTimeoutRef.current) {
       clearTimeout(scanTimeoutRef.current)
       scanTimeoutRef.current = null
-    }
-  }, [])
-
-  const applyCameraEnhancements = useCallback(async () => {
-    if (!scannerRef.current) {
-      return
-    }
-
-    try {
-      // Obtenir le track vidéo actif depuis l'élément scanner
-      const videoElement = scannerRef.current.querySelector('video')
-      if (!videoElement) {
-        return
-      }
-
-      const stream = videoElement.srcObject
-      if (!stream) {
-        return
-      }
-
-      const videoTrack = stream.getVideoTracks()[0]
-      if (!videoTrack) {
-        return
-      }
-
-      const capabilities = videoTrack.getCapabilities()
-      if (!capabilities) {
-        return
-      }
-
-      const desiredConstraints = {}
-
-      // Configurer le focus
-      if (capabilities.focusMode) {
-        if (Array.isArray(capabilities.focusMode)) {
-          if (capabilities.focusMode.includes('continuous')) {
-            desiredConstraints.focusMode = 'continuous'
-          } else if (capabilities.focusMode.includes('auto')) {
-            desiredConstraints.focusMode = 'auto'
-          }
-        }
-      }
-
-      // Configurer le zoom si disponible
-      if (capabilities.zoom) {
-        const minZoom = capabilities.zoom.min ?? 1.0
-        const maxZoom = capabilities.zoom.max ?? 2.0
-        const preferredZoom = Math.min(Math.max(minZoom, 1.3), maxZoom)
-        desiredConstraints.zoom = preferredZoom
-      }
-
-      // Essayer d'améliorer la résolution si disponible
-      if (capabilities.width && capabilities.height) {
-        // Essayer d'obtenir une résolution plus élevée si disponible
-        const widthConstraints = capabilities.width
-        const heightConstraints = capabilities.height
-        
-        if (typeof widthConstraints === 'object' && widthConstraints.max) {
-          const idealWidth = Math.min(widthConstraints.max, 1280)
-          if (idealWidth >= 640) {
-            desiredConstraints.width = { ideal: idealWidth }
-          }
-        }
-        
-        if (typeof heightConstraints === 'object' && heightConstraints.max) {
-          const idealHeight = Math.min(heightConstraints.max, 720)
-          if (idealHeight >= 480) {
-            desiredConstraints.height = { ideal: idealHeight }
-          }
-        }
-      }
-
-      // Appliquer les contraintes si on en a
-      if (Object.keys(desiredConstraints).length > 0) {
-        await videoTrack.applyConstraints({ advanced: [desiredConstraints] })
-      }
-    } catch (err) {
-      console.warn('Impossible d\'appliquer les contraintes caméra:', err)
     }
   }, [])
 
@@ -203,42 +120,30 @@ function BarcodeScanner({ type, onScan, onClose }) {
   useEffect(() => {
     const startScanning = async () => {
       try {
-        // Charger les paramètres de scan et les stocker dans le ref
-        scanSettingsRef.current = getScanSettings()
-        const settings = scanSettingsRef.current
+        const codeReader = new BrowserMultiFormatReader()
+        codeReaderRef.current = codeReader
         
-        const html5QrCode = new Html5Qrcode(scannerRef.current.id)
-        html5QrCodeRef.current = html5QrCode
-
         // Vibration au démarrage du scanner
         vibrate([50, 50, 50])
 
-        await html5QrCode.start(
-          { facingMode: 'environment' },
-          {
-            fps: settings.fps,
-            qrbox: function(viewfinderWidth, viewfinderHeight) {
-              // Utiliser le pourcentage configuré pour la zone de scan
-              const minEdgePercentage = settings.qrboxPercentage / 100
-              const minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight)
-              const qrboxSize = Math.floor(minEdgeSize * minEdgePercentage)
-              return {
-                width: qrboxSize,
-                height: qrboxSize
-              }
-            },
-            aspectRatio: settings.aspectRatio,
-            disableFlip: true // Toujours désactiver le retournement, utiliser uniquement la caméra arrière
-          },
-          handleCodeScanned,
-          (errorMessage) => {
-            // Ignorer les erreurs de scan continu
+        const videoInputDevices = await codeReader.listVideoInputDevices()
+        // Prefer environment facing camera
+        const selectedDeviceId = videoInputDevices.find(device => device.label.toLowerCase().includes('back'))?.deviceId 
+          || videoInputDevices[0].deviceId
+
+        await codeReader.decodeFromVideoDevice(
+          selectedDeviceId,
+          scannerRef.current,
+          (result, err) => {
+            if (result) {
+              handleCodeScanned(result.getText())
+            }
+            if (err && !(err instanceof NotFoundException)) {
+              console.warn('Scan error:', err)
+            }
           }
         )
-        // Appliquer les améliorations après le démarrage de la caméra
-        setTimeout(async () => {
-          await applyCameraEnhancements()
-        }, 500)
+        
         isScanningRef.current = true
         setError(null)
       } catch (err) {
@@ -255,10 +160,10 @@ function BarcodeScanner({ type, onScan, onClose }) {
     return () => {
       stopScanning()
     }
-  }, [type, handleCodeScanned, stopScanning, vibrate, applyCameraEnhancements])
+  }, [handleCodeScanned, stopScanning, vibrate])
 
   const handleClose = async () => {
-    await stopScanning()
+    stopScanning()
     // Réinitialiser les états
     currentCodeRef.current = null
     scanCountRef.current = 0
@@ -290,7 +195,14 @@ function BarcodeScanner({ type, onScan, onClose }) {
             </div>
           ) : (
             <>
-              <div id="scanner" ref={scannerRef} className="scanner-view" />
+              <div className="scanner-view-container">
+                 <video 
+                    id="scanner-video" 
+                    ref={scannerRef} 
+                    className="scanner-view" 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                 />
+              </div>
               <div className="scanner-progress-container">
                 <div className="scanner-progress-info">
                   {isValidating ? (
