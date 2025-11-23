@@ -2,11 +2,9 @@ const SCAN_SETTINGS_KEY = 'barcodeScannerSettings'
 
 // Valeurs par défaut
 const DEFAULT_SETTINGS = {
-  fps: 30,
-  qrboxPercentage: 80,
-  scanDelay: 150,
-  aspectRatio: 1.0
-  // disableFlip est toujours true (caméra arrière uniquement)
+  forceZBar: false, // Force l'utilisation de ZBar même si BarcodeDetector est disponible
+  scanDelay: 150,   // Délai entre les scans réussis (ms)
+  showBoundingBox: true // Afficher ou non les boîtes de détection
 }
 
 export const getScanSettings = () => {
@@ -14,9 +12,13 @@ export const getScanSettings = () => {
     const saved = localStorage.getItem(SCAN_SETTINGS_KEY)
     if (saved) {
       const parsed = JSON.parse(saved)
-      // Retirer disableFlip s'il existe (n'est plus utilisé)
+      // Nettoyage des anciennes clés
+      delete parsed.fps
+      delete parsed.qrboxPercentage
+      delete parsed.aspectRatio
       delete parsed.disableFlip
-      // Fusionner avec les valeurs par défaut pour gérer les nouvelles propriétés
+
+      // Fusionner avec les valeurs par défaut
       return { ...DEFAULT_SETTINGS, ...parsed }
     }
   } catch (err) {

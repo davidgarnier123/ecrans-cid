@@ -39,15 +39,15 @@ function SettingsScreen() {
     try {
       const text = await file.text()
       const result = await saveAgentsFromCSV(text)
-      setMessage({ 
-        type: 'success', 
-        text: `${result.count} agent(s) importé(s) avec succès. L'ancienne liste a été remplacée.` 
+      setMessage({
+        type: 'success',
+        text: `${result.count} agent(s) importé(s) avec succès. L'ancienne liste a été remplacée.`
       })
       await loadAgentCount()
     } catch (error) {
-      setMessage({ 
-        type: 'error', 
-        text: error.message || 'Erreur lors de l\'import du CSV' 
+      setMessage({
+        type: 'error',
+        text: error.message || 'Erreur lors de l\'import du CSV'
       })
     } finally {
       setUploading(false)
@@ -154,46 +154,36 @@ function SettingsScreen() {
           )}
 
           <div className="scan-settings-grid">
+
             <div className="setting-item">
-              <label className="setting-label">
-                <span>Framerate (FPS)</span>
-                <span className="setting-value">{scanSettings.fps}</span>
+              <label className="setting-label checkbox-label">
+                <span>Forcer le moteur ZBar (Debug)</span>
+                <input
+                  type="checkbox"
+                  checked={scanSettings.forceZBar || false}
+                  onChange={(e) => handleScanSettingChange('forceZBar', e.target.checked)}
+                  className="setting-checkbox"
+                />
               </label>
-              <input
-                type="range"
-                min="10"
-                max="60"
-                step="5"
-                value={scanSettings.fps}
-                onChange={(e) => handleScanSettingChange('fps', parseInt(e.target.value))}
-                className="setting-slider"
-              />
-              <div className="setting-range">
-                <span>10</span>
-                <span>60</span>
-              </div>
-              <p className="setting-hint">Plus élevé = plus de chances de détection, mais plus de consommation</p>
+              <p className="setting-hint">
+                Activez ceci pour utiliser le moteur ZBar (WebAssembly) même si le détecteur natif Android est disponible.
+                Utile pour tester le comportement iOS sur Android.
+              </p>
             </div>
 
             <div className="setting-item">
-              <label className="setting-label">
-                <span>Taille de la zone de scan (%)</span>
-                <span className="setting-value">{scanSettings.qrboxPercentage}%</span>
+              <label className="setting-label checkbox-label">
+                <span>Afficher les zones de détection</span>
+                <input
+                  type="checkbox"
+                  checked={scanSettings.showBoundingBox !== false}
+                  onChange={(e) => handleScanSettingChange('showBoundingBox', e.target.checked)}
+                  className="setting-checkbox"
+                />
               </label>
-              <input
-                type="range"
-                min="50"
-                max="100"
-                step="5"
-                value={scanSettings.qrboxPercentage}
-                onChange={(e) => handleScanSettingChange('qrboxPercentage', parseInt(e.target.value))}
-                className="setting-slider"
-              />
-              <div className="setting-range">
-                <span>50%</span>
-                <span>100%</span>
-              </div>
-              <p className="setting-hint">Zone plus grande = détection plus facile, mais peut être moins précise</p>
+              <p className="setting-hint">
+                Affiche un cadre coloré autour des codes-barres détectés (Vert = Natif, Rouge = ZBar).
+              </p>
             </div>
 
             <div className="setting-item">
@@ -204,7 +194,7 @@ function SettingsScreen() {
               <input
                 type="range"
                 min="100"
-                max="500"
+                max="1000"
                 step="50"
                 value={scanSettings.scanDelay}
                 onChange={(e) => handleScanSettingChange('scanDelay', parseInt(e.target.value))}
@@ -212,26 +202,9 @@ function SettingsScreen() {
               />
               <div className="setting-range">
                 <span>100ms</span>
-                <span>500ms</span>
+                <span>1000ms</span>
               </div>
-              <p className="setting-hint">Délai plus court = détection plus rapide, mais peut être moins stable</p>
-            </div>
-
-            <div className="setting-item">
-              <label className="setting-label">
-                <span>Ratio d'aspect</span>
-              </label>
-              <select
-                value={scanSettings.aspectRatio}
-                onChange={(e) => handleScanSettingChange('aspectRatio', parseFloat(e.target.value))}
-                className="setting-select"
-              >
-                <option value="1.0">1:1 (Carré)</option>
-                <option value="1.333">4:3</option>
-                <option value="1.5">3:2</option>
-                <option value="1.777">16:9</option>
-              </select>
-              <p className="setting-hint">Ratio carré généralement meilleur pour les codes-barres</p>
+              <p className="setting-hint">Augmentez ce délai si vous scannez accidentellement le même code plusieurs fois.</p>
             </div>
 
           </div>
