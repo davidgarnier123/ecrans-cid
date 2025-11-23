@@ -345,6 +345,18 @@ function BarcodeScanner({ type, onScan, onClose }) {
                   </div>
                 )}
               </div>
+
+              {/* Indicateur discret de moteur (Debug) */}
+              <div style={{
+                position: 'absolute',
+                bottom: '5px',
+                right: '5px',
+                fontSize: '10px',
+                color: 'rgba(255, 255, 255, 0.3)',
+                pointerEvents: 'none'
+              }}>
+                {usingNative && !scanSettingsRef.current.forceZBar ? 'Native' : 'ZBar'}
+              </div>
             </>
           )}
         </div>
