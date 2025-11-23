@@ -1,23 +1,31 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { BrowserMultiFormatReader, NotFoundException, BarcodeFormat, DecodeHintType } from '@zxing/library'
+import * as zbarWasm from '@undecaf/zbar-wasm'
 import { getScanSettings } from '../utils/scanSettings'
 import './BarcodeScanner.css'
 
 const REQUIRED_SCANS = 2 // Nombre de scans consécutifs requis pour valider
 
 function BarcodeScanner({ type, onScan, onClose }) {
-  const scannerRef = useRef(null)
-  const codeReaderRef = useRef(null)
-  const isScanningRef = useRef(false)
+  const videoRef = useRef(null)
+  const canvasRef = useRef(null)
+  const nativeDetectorRef = useRef(null)
+  
   const [error, setError] = useState(null)
+  const [usingNative, setUsingNative] = useState(false)
+  const [debugMode, setDebugMode] = useState(false) // Pour forcer ZBar sur Android
+  
+  // États de validation
   const [currentCode, setCurrentCode] = useState(null)
   const [scanCount, setScanCount] = useState(0)
   const [isValidating, setIsValidating] = useState(false)
-  const [manualCode, setManualCode] = useState(null) // Code proposé pour validation manuelle
+  const [manualCode, setManualCode] = useState(null)
+  
+  const scanCountRef = useRef(0)
+  const currentCodeRef = useRef(null)
   const lastScanTimeRef = useRef(0)
   const scanTimeoutRef = useRef(null)
-  const currentCodeRef = useRef(null)
-  const scanCountRef = useRef(0)
+  const isScanningRef = useRef(false)
+  const animationFrameRef = useRef(null)
   const scanSettingsRef = useRef(getScanSettings())
 
   // Fonction pour vibrer le téléphone
@@ -28,11 +36,17 @@ function BarcodeScanner({ type, onScan, onClose }) {
   }, [])
 
   const stopScanning = useCallback(() => {
-    if (codeReaderRef.current) {
-      codeReaderRef.current.reset()
-      codeReaderRef.current = null
-      isScanningRef.current = false
+    isScanningRef.current = false
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current)
     }
+    
+    // Arrêter les tracks de la vidéo
+    if (videoRef.current && videoRef.current.srcObject) {
+      videoRef.current.srcObject.getTracks().forEach(track => track.stop())
+      videoRef.current.srcObject = null
+    }
+
     if (scanTimeoutRef.current) {
       clearTimeout(scanTimeoutRef.current)
       scanTimeoutRef.current = null
@@ -117,48 +131,117 @@ function BarcodeScanner({ type, onScan, onClose }) {
     }
   }, [manualCode, onScan, stopScanning])
 
+  // Boucle de scan
+  const scanFrame = useCallback(async () => {
+    if (!isScanningRef.current || !videoRef.current || !canvasRef.current) return
+
+    const video = videoRef.current
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })
+
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+      // Ajuster la taille du canvas à la vidéo
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
+
+      // Dessiner la frame vidéo
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+      // --- DETECTION ---
+      try {
+        // Si on utilise le détecteur natif ET qu'on n'est pas en mode debug (force ZBar)
+        if (usingNative && nativeDetectorRef.current && !debugMode) {
+          const barcodes = await nativeDetectorRef.current.detect(video)
+          
+          // Dessiner les bounding boxes
+          barcodes.forEach(barcode => {
+            ctx.strokeStyle = '#00ff00'
+            ctx.lineWidth = 4
+            const { x, y, width, height } = barcode.boundingBox
+            ctx.strokeRect(x, y, width, height)
+          })
+
+          if (barcodes.length > 0) {
+            handleCodeScanned(barcodes[0].rawValue)
+          }
+
+        } else {
+          // --- FALLBACK ZBAR ---
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+          const results = await zbarWasm.scanImageData(imageData)
+          
+          if (results.length > 0) {
+            results.forEach(result => {
+              // Dessiner les points (ZBar retourne des points, pas une box simple)
+              if (result.points && result.points.length > 0) {
+                ctx.strokeStyle = '#ff0000' // Rouge pour ZBar pour différencier
+                ctx.lineWidth = 4
+                ctx.beginPath()
+                ctx.moveTo(result.points[0].x, result.points[0].y)
+                for (let i = 1; i < result.points.length; i++) {
+                  ctx.lineTo(result.points[i].x, result.points[i].y)
+                }
+                ctx.closePath()
+                ctx.stroke()
+              }
+            })
+
+            // ZBar retourne le texte décodé via decode()
+            const text = results[0].decode()
+            handleCodeScanned(text)
+          }
+        }
+      } catch (err) {
+        console.warn("Scan error:", err)
+      }
+    }
+
+    animationFrameRef.current = requestAnimationFrame(scanFrame)
+  }, [usingNative, debugMode, handleCodeScanned])
+
+  // Initialisation
   useEffect(() => {
     const startScanning = async () => {
       try {
-        const hints = new Map()
-        const formats = [
-          BarcodeFormat.CODE_128,
-          BarcodeFormat.CODE_39,
-          BarcodeFormat.EAN_13,
-          BarcodeFormat.EAN_8,
-          BarcodeFormat.ITF,
-          BarcodeFormat.CODABAR
-        ]
-        hints.set(DecodeHintType.POSSIBLE_FORMATS, formats)
-        hints.set(DecodeHintType.TRY_HARDER, true)
-
-        const codeReader = new BrowserMultiFormatReader(hints)
-        codeReaderRef.current = codeReader
-
-        // Vibration au démarrage du scanner
-        vibrate([50, 50, 50])
-
-        const videoInputDevices = await codeReader.listVideoInputDevices()
-        // Prefer environment facing camera
-        const selectedDeviceId = videoInputDevices.find(device => device.label.toLowerCase().includes('back'))?.deviceId
-          || videoInputDevices[0].deviceId
-
-        await codeReader.decodeFromVideoDevice(
-          selectedDeviceId,
-          scannerRef.current,
-          (result, err) => {
-            if (result) {
-              console.log('Barcode detected:', result.getText(), 'Format:', result.getBarcodeFormat())
-              handleCodeScanned(result.getText())
+        // 1. Initialiser Native Detector si disponible
+        if ('BarcodeDetector' in window) {
+          try {
+            const formats = await window.BarcodeDetector.getSupportedFormats()
+            if (formats.includes('code_128') || formats.includes('code_39')) {
+              nativeDetectorRef.current = new window.BarcodeDetector({
+                formats: ['code_128', 'code_39']
+              })
+              setUsingNative(true)
+              console.log("Native BarcodeDetector initialized")
             }
-            if (err && !(err instanceof NotFoundException)) {
-              console.warn('Scan error:', err)
-            }
+          } catch (e) {
+            console.warn("Native fallback failed:", e)
           }
-        )
+        }
 
-        isScanningRef.current = true
+        // 2. Démarrer la caméra
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { 
+            facingMode: "environment", 
+            width: { ideal: 1920 }, 
+            height: { ideal: 1080 } 
+          }
+        })
+        
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream
+          // Attendre que la vidéo soit prête avant de lancer la boucle
+          videoRef.current.onloadedmetadata = () => {
+            videoRef.current.play()
+            isScanningRef.current = true
+            scanFrame()
+          }
+        }
+        
+        // Vibration au démarrage
+        vibrate([50, 50, 50])
         setError(null)
+
       } catch (err) {
         console.error('Erreur lors du démarrage du scanner:', err)
         setError('Impossible de démarrer la caméra. Vérifiez les permissions.')
@@ -166,16 +249,14 @@ function BarcodeScanner({ type, onScan, onClose }) {
       }
     }
 
-    if (scannerRef.current) {
-      startScanning()
-    }
+    startScanning()
 
     return () => {
       stopScanning()
     }
-  }, [handleCodeScanned, stopScanning, vibrate])
+  }, [scanFrame, stopScanning, vibrate])
 
-  const handleClose = async () => {
+  const handleClose = () => {
     stopScanning()
     // Réinitialiser les états
     currentCodeRef.current = null
@@ -209,13 +290,32 @@ function BarcodeScanner({ type, onScan, onClose }) {
           ) : (
             <>
               <div className="scanner-view-container">
+                {/* Video cachée mais active pour le flux */}
                 <video
-                  id="scanner-video"
-                  ref={scannerRef}
-                  className="scanner-view"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  ref={videoRef}
+                  className="scanner-video-element"
+                  playsInline
+                  muted
+                  style={{ display: 'none' }} 
+                />
+                {/* Canvas qui affiche le flux + les overlays */}
+                <canvas 
+                  ref={canvasRef}
+                  className="scanner-canvas"
                 />
               </div>
+              
+              <div className="scanner-debug-controls">
+                <label style={{ fontSize: '10px', color: '#aaa' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={debugMode} 
+                    onChange={(e) => setDebugMode(e.target.checked)} 
+                  />
+                  Force ZBar (Debug) | Native: {usingNative ? 'Yes' : 'No'}
+                </label>
+              </div>
+
               <div className="scanner-progress-container">
                 <div className="scanner-progress-info">
                   {isValidating ? (

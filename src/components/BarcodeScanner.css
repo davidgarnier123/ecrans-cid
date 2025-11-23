@@ -76,12 +76,28 @@
   gap: 1rem;
 }
 
-.scanner-view {
+.scanner-canvas {
   width: 100%;
-  max-width: 100%;
-  border-radius: 8px;
-  overflow: hidden;
-  position: relative;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.scanner-debug-controls {
+  position: absolute;
+  top: 80px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.scanner-debug-controls label {
+  background: rgba(0, 0, 0, 0.5);
+  padding: 4px 8px;
+  border-radius: 4px;
+  pointer-events: auto;
 }
 
 .scanner-progress-container {
