@@ -187,6 +187,22 @@ function SettingsScreen() {
             </div>
 
             <div className="setting-item">
+              <label className="setting-label checkbox-label">
+                <span>Double validation</span>
+                <input
+                  type="checkbox"
+                  checked={scanSettings.doubleValidation !== false}
+                  onChange={(e) => handleScanSettingChange('doubleValidation', e.target.checked)}
+                  className="setting-checkbox"
+                />
+              </label>
+              <p className="setting-hint">
+                Si activé, le scanner doit détecter le même code 2 fois de suite pour le valider.
+                Désactivez pour une validation instantanée (plus rapide mais risque d'erreurs).
+              </p>
+            </div>
+
+            <div className="setting-item">
               <label className="setting-label">
                 <span>Délai entre scans (ms)</span>
                 <span className="setting-value">{scanSettings.scanDelay}ms</span>

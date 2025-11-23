@@ -4,7 +4,8 @@ const SCAN_SETTINGS_KEY = 'barcodeScannerSettings'
 const DEFAULT_SETTINGS = {
   forceZBar: false, // Force l'utilisation de ZBar même si BarcodeDetector est disponible
   scanDelay: 150,   // Délai entre les scans réussis (ms)
-  showBoundingBox: true // Afficher ou non les boîtes de détection
+  showBoundingBox: true, // Afficher ou non les boîtes de détection
+  doubleValidation: true // Nécessite 2 scans consécutifs pour valider
 }
 
 export const getScanSettings = () => {
