@@ -1,295 +1,45 @@
-.scanner-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.95);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 0;
-}
-
-.scanner-modal {
-  background: black;
-  border-radius: 0;
-  width: 100%;
-  height: 100%;
-  max-width: 100%;
-  max-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.scanner-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 1.5rem;
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 10;
-}
-
-.scanner-header h3 {
-  font-size: 1.25rem;
-  color: white;
-  font-weight: 600;
-}
-
-.close-btn {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  font-size: 2rem;
-  line-height: 1;
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: all 0.2s;
-}
-
-.close-btn:active {
-  background: rgba(255, 255, 255, 0.3);
-  transform: scale(0.95);
-}
-
-.scanner-content {
-  flex: 1;
+.scanner-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  min-height: 400px;
-  gap: 1rem;
-}
-
-.scanner-canvas {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
+  max-width: 500px;
+  margin: 0 auto;
 }
 
-.scanner-debug-controls {
-  position: absolute;
-  top: 80px;
-  left: 0;
-  right: 0;
-  text-align: center;
-  z-index: 20;
-  pointer-events: none;
-}
-
-.scanner-debug-controls label {
-  background: rgba(0, 0, 0, 0.5);
-  padding: 4px 8px;
-  border-radius: 4px;
-  pointer-events: auto;
-}
-
-.scanner-progress-container {
+#html5qr-code-reader {
   width: 100%;
-  padding: 0 0.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.scanner-progress-info {
-  margin-bottom: 0.75rem;
-  text-align: center;
-}
-
-.progress-message {
-  display: inline-block;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-
-.progress-message.waiting {
-  background: #e3f2fd;
-  color: #1976d2;
-}
-
-.progress-message.scanning {
-  background: #fff3e0;
-  color: #f57c00;
-  font-family: 'Courier New', monospace;
-  word-break: break-all;
-}
-
-.progress-message.success {
-  background: #e8f5e9;
-  color: #2e7d32;
-  font-weight: 600;
-  animation: pulse 0.5s ease-in-out;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-}
-
-.scanner-progress-bar {
-  width: 100%;
-  height: 24px;
-  background: #e9ecef;
-  border-radius: 12px;
-  overflow: hidden;
-  position: relative;
-  margin-bottom: 0.5rem;
-}
-
-.scanner-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
-  border-radius: 12px;
-  transition: width 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.scanner-progress-fill::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.3),
-    transparent
-  );
-  animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-.scanner-progress-fill.validated {
-  background: linear-gradient(90deg, #51cf66 0%, #40c057 100%);
-}
-
-.scanner-progress-text {
-  text-align: center;
-  font-size: 0.875rem;
-  color: #6c757d;
-  font-weight: 500;
-  margin-bottom: 0.25rem;
-}
-
-.scanner-error {
-  text-align: center;
-  padding: 2rem;
-}
-
-.scanner-error p {
-  color: #dc3545;
-  margin-bottom: 1rem;
-  font-size: 1rem;
-}
-
-.scanner-error button {
-  padding: 0.75rem 1.5rem;
-  background: #3b82f6;
-  color: white;
   border-radius: 8px;
-  font-size: 1rem;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.scanner-footer {
-  padding: 1.5rem;
-  background: rgba(0, 0, 0, 0.8);
+.scanner-placeholder {
+  width: 100%;
+  height: 300px;
+  background-color: #f0f0f0;
   display: flex;
   justify-content: center;
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 10;
-  padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  align-items: center;
+  border-radius: 8px;
+  border: 2px dashed #ccc;
+  color: #666;
+  font-weight: 500;
 }
 
-.cancel-btn {
-  padding: 0.875rem 2rem;
-  background: #6c757d;
+.scanner-toggle-btn {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #007bff;
   color: white;
-  border-radius: 10px;
+  border: none;
+  border-radius: 4px;
   font-size: 1rem;
   font-weight: 600;
-  transition: all 0.2s;
-  min-height: 44px;
-  width: 100%;
-  max-width: 300px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-}
-
-.cancel-btn:active {
-  background: #5a6268;
-  transform: scale(0.98);
-}
-
-.manual-validation-code {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #3b82f6;
-  font-family: 'Courier New', monospace;
-  letter-spacing: 0.05em;
-  margin: 0.5rem auto 0;
-  padding: 0.4rem 0.8rem;
-  background: rgba(59, 130, 246, 0.15);
-  border: 1px solid rgba(59, 130, 246, 0.4);
-  border-radius: 6px;
-  text-align: center;
   cursor: pointer;
-  transition: all 0.2s;
-  display: inline-block;
-  max-width: 90%;
-  animation: fadeIn 0.3s ease-out;
-  user-select: none;
+  transition: background-color 0.2s;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+.scanner-toggle-btn:hover {
+  background-color: #0056b3;
 }
-
-.manual-validation-code:active {
-  background: rgba(59, 130, 246, 0.25);
-  transform: scale(0.97);
-  border-color: #3b82f6;
-}
-

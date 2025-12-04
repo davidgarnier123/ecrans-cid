@@ -6,22 +6,20 @@ import './ScanScreen.css'
 function ScanScreen({ onSave }) {
   const [sortants, setSortants] = useState([])
   const [entrants, setEntrants] = useState([])
-  const [scanningType, setScanningType] = useState(null) // 'sortant' ou 'entrant'
   const [showValidation, setShowValidation] = useState(false)
   const [manualInput, setManualInput] = useState({ sortant: '', entrant: '' })
   const [activeTab, setActiveTab] = useState('sortant') // 'sortant' ou 'entrant'
 
   const handleScan = (code) => {
-    if (scanningType === 'sortant') {
+    if (activeTab === 'sortant') {
       if (!sortants.includes(code)) {
-        setSortants([...sortants, code])
+        setSortants(prev => [...prev, code])
       }
-    } else if (scanningType === 'entrant') {
+    } else if (activeTab === 'entrant') {
       if (!entrants.includes(code)) {
-        setEntrants([...entrants, code])
+        setEntrants(prev => [...prev, code])
       }
     }
-    setScanningType(null)
   }
 
   const handleManualAdd = () => {
@@ -31,7 +29,7 @@ function ScanScreen({ onSave }) {
 
     // Validation flexible : généralement 7 chiffres mais accepte d'autres formats
     const isValid = /^[0-9]{4,10}$/.test(input) // Entre 4 et 10 chiffres
-    
+
     if (!isValid) {
       alert('Veuillez entrer un identifiant valide (généralement 7 chiffres)')
       return
@@ -100,7 +98,6 @@ function ScanScreen({ onSave }) {
   const handleReset = () => {
     setSortants([])
     setEntrants([])
-    setScanningType(null)
   }
 
   const currentCodes = getCurrentCodes()
@@ -122,6 +119,14 @@ function ScanScreen({ onSave }) {
           >
             Écrans Entrants ({entrants.length})
           </button>
+        </div>
+
+        {/* Scanner intégré */}
+        <div className="scanner-wrapper" style={{ marginBottom: '1rem' }}>
+          <BarcodeScanner
+            onScan={handleScan}
+            settings={{ fps: 10, qrbox: 250 }}
+          />
         </div>
 
         <div className="codes-list">
@@ -162,15 +167,6 @@ function ScanScreen({ onSave }) {
             Ajouter
           </button>
         </div>
-
-        <div className="scan-buttons-group">
-          <button
-            className={`scan-btn ${activeTab}`}
-            onClick={() => setScanningType(activeTab)}
-          >
-            Scanner un écran {activeTab === 'sortant' ? 'sortant' : 'entrant'}
-          </button>
-        </div>
       </div>
 
       <div className="actions">
@@ -185,14 +181,6 @@ function ScanScreen({ onSave }) {
           Valider ({sortants.length} sortant{sortants.length > 1 ? 's' : ''}, {entrants.length} entrant{entrants.length > 1 ? 's' : ''})
         </button>
       </div>
-
-      {scanningType && (
-        <BarcodeScanner
-          type={scanningType}
-          onScan={handleScan}
-          onClose={() => setScanningType(null)}
-        />
-      )}
 
       {showValidation && (
         <ValidationModal
