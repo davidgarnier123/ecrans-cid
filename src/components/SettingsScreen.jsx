@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Html5Qrcode } from "html5-qrcode"
 import { saveAgentsFromCSV, getAgentCount } from '../utils/agentDB'
 import { getScanSettings, saveScanSettings, resetScanSettings } from '../utils/scanSettings'
 import './SettingsScreen.css'
@@ -10,11 +11,21 @@ function SettingsScreen() {
   const [fileName, setFileName] = useState('')
   const [scanSettings, setScanSettings] = useState(getScanSettings())
   const [scanSettingsMessage, setScanSettingsMessage] = useState({ type: '', text: '' })
+  const [cameras, setCameras] = useState([])
 
   useEffect(() => {
     loadAgentCount()
     // Charger les paramètres de scan
     setScanSettings(getScanSettings())
+
+    // Charger les caméras
+    Html5Qrcode.getCameras().then(devices => {
+      if (devices && devices.length) {
+        setCameras(devices)
+      }
+    }).catch(err => {
+      console.warn("Erreur chargement caméras:", err)
+    })
   }, [])
 
   const loadAgentCount = async () => {
@@ -156,33 +167,23 @@ function SettingsScreen() {
           <div className="scan-settings-grid">
 
             <div className="setting-item">
-              <label className="setting-label checkbox-label">
-                <span>Forcer le moteur ZBar (Debug)</span>
-                <input
-                  type="checkbox"
-                  checked={scanSettings.forceZBar || false}
-                  onChange={(e) => handleScanSettingChange('forceZBar', e.target.checked)}
-                  className="setting-checkbox"
-                />
+              <label className="setting-label">
+                <span>Caméra</span>
+                <select
+                  value={scanSettings.cameraId || ''}
+                  onChange={(e) => handleScanSettingChange('cameraId', e.target.value)}
+                  className="setting-select"
+                >
+                  <option value="">Automatique (Arrière)</option>
+                  {cameras.map(camera => (
+                    <option key={camera.id} value={camera.id}>
+                      {camera.label || `Caméra ${camera.id}`}
+                    </option>
+                  ))}
+                </select>
               </label>
               <p className="setting-hint">
-                Activez ceci pour utiliser le moteur ZBar (WebAssembly) même si le détecteur natif Android est disponible.
-                Utile pour tester le comportement iOS sur Android.
-              </p>
-            </div>
-
-            <div className="setting-item">
-              <label className="setting-label checkbox-label">
-                <span>Afficher les zones de détection</span>
-                <input
-                  type="checkbox"
-                  checked={scanSettings.showBoundingBox !== false}
-                  onChange={(e) => handleScanSettingChange('showBoundingBox', e.target.checked)}
-                  className="setting-checkbox"
-                />
-              </label>
-              <p className="setting-hint">
-                Affiche un cadre coloré autour des codes-barres détectés (Vert = Natif, Rouge = ZBar).
+                Sélectionnez la caméra à utiliser pour le scan.
               </p>
             </div>
 

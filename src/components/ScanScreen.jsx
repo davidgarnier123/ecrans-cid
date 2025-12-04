@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import BarcodeScanner from './BarcodeScanner'
 import ValidationModal from './ValidationModal'
+import { getScanSettings } from '../utils/scanSettings'
 import './ScanScreen.css'
 
 function ScanScreen({ onSave }) {
@@ -125,7 +126,11 @@ function ScanScreen({ onSave }) {
         <div className="scanner-wrapper" style={{ marginBottom: '1rem' }}>
           <BarcodeScanner
             onScan={handleScan}
-            settings={{ fps: 10, qrbox: 250 }}
+            settings={{
+              fps: 10,
+              qrbox: 250,
+              cameraId: getScanSettings().cameraId
+            }}
           />
         </div>
 

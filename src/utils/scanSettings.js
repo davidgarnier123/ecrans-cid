@@ -2,10 +2,9 @@ const SCAN_SETTINGS_KEY = 'barcodeScannerSettings'
 
 // Valeurs par défaut
 const DEFAULT_SETTINGS = {
-  forceZBar: false, // Force l'utilisation de ZBar même si BarcodeDetector est disponible
   scanDelay: 150,   // Délai entre les scans réussis (ms)
-  showBoundingBox: true, // Afficher ou non les boîtes de détection
-  doubleValidation: true // Nécessite 2 scans consécutifs pour valider
+  doubleValidation: true, // Nécessite 2 scans consécutifs pour valider
+  cameraId: null // ID de la caméra sélectionnée
 }
 
 export const getScanSettings = () => {
@@ -14,10 +13,10 @@ export const getScanSettings = () => {
     if (saved) {
       const parsed = JSON.parse(saved)
       // Nettoyage des anciennes clés
+      delete parsed.forceZBar
+      delete parsed.showBoundingBox
       delete parsed.fps
       delete parsed.qrboxPercentage
-      delete parsed.aspectRatio
-      delete parsed.disableFlip
 
       // Fusionner avec les valeurs par défaut
       return { ...DEFAULT_SETTINGS, ...parsed }
